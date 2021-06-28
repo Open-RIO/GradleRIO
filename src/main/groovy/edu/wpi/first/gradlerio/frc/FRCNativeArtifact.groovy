@@ -40,10 +40,10 @@ class FRCNativeArtifact extends NativeArtifact {
             def binFile = PathUtils.combine(ctx.workingDir, filename ?: file.get().name)
             ctx.execute("chmod +x /home/lvuser/robotCommand; chown lvuser /home/lvuser/robotCommand")
             ctx.execute("chmod +x \"${binFile}\"; chown lvuser \"${binFile}\"")
-            // Let user program set RT thread priorities by making CAP_SYS_NICE
-            // permitted, inheritable, and effective. See "man 7 capabilities"
-            // for docs on capabilities and file capability sets.
-            ctx.execute("setcap cap_sys_nice+eip \"${binFile}\"")
+            // Make user program setuid admin. This lets the user program set RT
+            // thread priorities after it calls setuid(0).
+            ctx.execute("chown admin \"${binFile}\"")
+            ctx.execute("chmod u+s \"${binFile}\"")
             ctx.execute("sync")
             ctx.execute("ldconfig")
             ctx.execute(". /etc/profile.d/natinst-path.sh; /usr/local/frc/bin/frcKillRobot.sh -t -r 2> /dev/null")
