@@ -8,6 +8,7 @@ import org.gradle.api.NamedDomainObjectContainer
 @CompileStatic
 class SimulationExtension {
     Map<String, String> environment = [:]
+    String cppSimTask = ""
 
     void envVar(String name, String value) {
         environment[name] = value

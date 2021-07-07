@@ -1,27 +1,26 @@
 package edu.wpi.first.gradlerio.test
 
-import edu.wpi.first.gradlerio.ExternalLaunchTask
-import edu.wpi.first.gradlerio.test.TestPlugin
+import edu.wpi.first.gradlerio.wpi.simulation.SimulationExtension
 import groovy.transform.CompileStatic
+import org.gradle.api.DefaultTask
+import org.gradle.api.Task
 import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.TaskAction
-import org.gradle.nativeplatform.NativeExecutableBinarySpec
-import org.gradle.nativeplatform.tasks.InstallExecutable
 
 @CompileStatic
-class NativeSimulationTask extends ExternalLaunchTask {
-    @Internal
-    NativeExecutableBinarySpec binary
-
-    @TaskAction
-    void run() {
-        def installTask = binary.tasks.withType(InstallExecutable).first()
-        def dir = new File(installTask.installDirectory.asFile.get(), "lib")
-
-        environment.putAll(TestPlugin.getSimLaunchEnv(project, dir.absolutePath))
-
-        workingDir = dir
-        launch("\"${installTask.runScriptFile.get().asFile.absolutePath}\"")
+class NativeSimulationTask extends DefaultTask {
+    void validate(List<String> binaryTasks) {
+        def simTask = project.extensions.getByType(SimulationExtension).cppSimTask
+        if (simTask != "") {
+            this.dependsOn(simTask)
+            return
+        }
+        if (binaryTasks.size() == 0) {
+            logger.error("No Binary Simulation tasks found.");
+        } else if (binaryTasks.size() == 1) {
+            this.dependsOn(binaryTasks.first())
+        } else {
+            logger.error("More than one binary simulation task was found.")
+            logger.error("Please set the `cppSimTask` variable in the `sim` block in your `build.gradle`.")
+        }
     }
-
 }

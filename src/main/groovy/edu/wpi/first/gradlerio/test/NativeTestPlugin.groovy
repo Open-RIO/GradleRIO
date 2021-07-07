@@ -14,12 +14,10 @@ import org.gradle.model.ModelMap
 import org.gradle.model.Mutate
 import org.gradle.model.RuleSource
 import org.gradle.model.Validate
-import org.gradle.nativeplatform.NativeComponentSpec
 import org.gradle.nativeplatform.NativeExecutableBinarySpec
 import org.gradle.nativeplatform.NativeExecutableSpec
 import org.gradle.nativeplatform.tasks.InstallExecutable
 import org.gradle.nativeplatform.test.NativeTestSuiteBinarySpec
-import org.gradle.nativeplatform.test.NativeTestSuiteSpec
 import org.gradle.nativeplatform.test.googletest.GoogleTestTestSuiteBinarySpec
 import org.gradle.platform.base.BinaryContainer
 import org.gradle.platform.base.ComponentSpecContainer
@@ -66,19 +64,30 @@ class NativeTestPlugin implements Plugin<Project> {
 
         @Mutate
         void addSimulationTasks(ModelMap<Task> tasks, ComponentSpecContainer components) {
+            List<String> nativeSimTasks = new ArrayList<String>()
             components.withType(NativeExecutableSpec).each { NativeExecutableSpec component ->
                 component.binaries.withType(NativeExecutableBinarySpec).each { NativeExecutableBinarySpec bin ->
                     if (bin.targetPlatform.operatingSystem.current && !bin.targetPlatform.name.equals(NativePlatforms.roborio)) {
                         def name = "simulate${((BinarySpecInternal) bin).getProjectScopedName().capitalize()}".toString()
-                        tasks.create(name, NativeSimulationTask, { NativeSimulationTask task ->
+                        if (name.contains("Debug")) { // TODO: when removing hardcoding simulation to debug, deal with this
+                            nativeSimTasks.add(name)
+                        }
+                        tasks.create(name, NativeBinarySimulationTask, { NativeBinarySimulationTask task ->
                             task.group = "GradleRIO"
                             task.description = "Launch simulation for native component ${component.name}"
                             task.binary = bin
                             task.dependsOn(bin.tasks.install)
-                        } as Action<NativeSimulationTask>)
+
+                        } as Action<NativeBinarySimulationTask>)
+                        System.err.println("abc, ${name}, ${nativeSimTasks.size()}")
                     }
                 }
+                tasks.create("simulateCpp", NativeSimulationTask) {
+                    it.group = "GradleRIO"
+                    it.validate(nativeSimTasks)
+                }
             }
+            System.err.println("def, ${nativeSimTasks.size()}")
         }
 
         @Validate
