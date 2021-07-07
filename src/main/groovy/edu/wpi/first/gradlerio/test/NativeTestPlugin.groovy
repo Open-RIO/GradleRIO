@@ -96,12 +96,14 @@ class NativeTestPlugin implements Plugin<Project> {
                 }
             }
 
-            binaries.withType(NativeTestSuiteBinarySpec).each { NativeTestSuiteBinarySpec bin ->
-                if (bin.targetPlatform.operatingSystem.current &&
-                        bin.targetPlatform.name.equals(NativePlatforms.desktop) &&
-                        bin.buildType.name.equals('debug')) {
-                    mainTask.testBinaries << bin
-                    mainTask.dependsOn bin.tasks.install
+            if (mainTask.includeTestBinaries) {
+                binaries.withType(NativeTestSuiteBinarySpec).each { NativeTestSuiteBinarySpec bin ->
+                    if (bin.targetPlatform.operatingSystem.current &&
+                            bin.targetPlatform.name.equals(NativePlatforms.desktop) &&
+                            bin.buildType.name.equals('debug')) {
+                        mainTask.testBinaries << bin
+                        mainTask.dependsOn bin.tasks.install
+                    }
                 }
             }
         }
