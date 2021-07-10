@@ -1,0 +1,78 @@
+import groovy.json.JsonOutput
+
+Map<String, Object> vendorJson() {
+  return [
+    fileName: "${ext.vendorLibraryName}.json",
+    name: ext.vendorLibraryName,
+    version: project.version,
+    uuid: ext.uuid,
+    mavenUrls: [
+      ext.mavenUrl
+    ],
+    jsonUrl: ext.jsonUrl,
+    cppDependencies: [
+      [
+        groupId: project.group,
+        artifactId: ext.libraryCppName,
+        version: project.version,
+        libName: ext.vendorLibraryName,
+        configuration: "native_${ext.vendorLibraryName}",
+        headerClassifier: 'headers',
+        sharedLibrary: true,
+        skipInvalidPlatforms: true,
+        binaryPlatforms: [
+          "linuxx86-64",
+          "windowsx86-64",
+          "osxx86-64",
+          "linuxathena"
+        ]
+      ]
+    ],
+    javaDependencies: [
+      groupId: project.group,
+      artifactId: ext.libraryJavaName,
+      version: project.version
+    ]
+  ]
+}
+
+String vendorJsonString() {
+  return JsonOutput.prettyPrint(JsonOutput.toJson(vendorJson()))
+}
+
+task generateVendorDepsJson() {
+  def outfile = new File(buildDir, "${project.ext.vendorLibraryName}.json")
+  outputs.file(outfile)
+
+  doLast {
+    outfile.text = vendorJsonString()
+  }
+}
+
+publishing {
+  publications {
+    vendordeps(MavenPublication) {
+      artifactId "${project.ext.vendorLibraryName}-FRCDeps"
+      artifact(generateVendorDepsJson.outputs.files.files[0]) {
+        builtBy generateVendorDepsJson
+      }
+    }
+  }
+}
+
+afterEvaluate {
+  publishing.repositories.all {
+    def vendorTask = task "writeLatestVendorDepsTo${name}"() {
+      def outfile = new File(new File(url), "${project.ext.vendorLibraryName}.json")
+      outputs.file(outfile)
+
+      doLast {
+        outfile.text = vendorJsonString()
+      }
+    }
+
+    tasks.withType(PublishToMavenRepository).all {
+      dependsOn vendorTask
+    }
+  }
+}

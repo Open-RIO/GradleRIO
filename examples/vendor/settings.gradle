@@ -1,0 +1,27 @@
+import org.gradle.internal.os.OperatingSystem
+
+pluginManagement {
+    repositories {
+        mavenLocal()
+        gradlePluginPortal()
+        String frcYear = '2019'
+        File frcHome
+        if (OperatingSystem.current().isWindows()) {
+            String publicFolder = System.getenv('PUBLIC')
+            if (publicFolder == null) {
+                publicFolder = "C:\\Users\\Public"
+            }
+            frcHome = new File(publicFolder, "frc${frcYear}")
+        } else {
+            def userFolder = System.getProperty("user.home")
+            frcHome = new File(userFolder, "frc${frcYear}")
+        }
+        def frcHomeMaven = new File(frcHome, 'maven')
+        maven {
+            name 'frcHome'
+            url frcHomeMaven
+        }
+    }
+}
+
+rootProject.name = 'VendorLibrary'

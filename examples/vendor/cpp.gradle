@@ -1,0 +1,88 @@
+apply plugin: 'cpp'
+apply plugin: 'google-test-test-suite'
+
+model {
+    components {
+        "${vendorLibraryName}"(NativeLibrarySpec) {
+            targetPlatform wpi.platforms.roborio
+            targetPlatform wpi.platforms.desktop
+
+            binaries.all {
+                sources {
+                    cpp(CppSourceSet) {
+                        def target = targetPlatform.name == wpi.platforms.roborio ? 'robot' : 'simulation'
+                        source {
+                            srcDir 'src/main/cpp_common'
+                            srcDir "src/main/cpp_${target}"
+                            include '**/*.cpp'
+                        }
+                        exportedHeaders {
+                            srcDir 'src/main/include'       // Only src/main/include is included in the final maven package.
+                            srcDir "src/main/cpp_${target}"
+                            include '**/*.h', '**/*.hpp', '**/*.inc'
+                        }
+                    }
+                }
+            }
+
+            useLibrary(it, "wpilib")
+        }
+    }
+    testSuites {
+        "${vendorLibraryName}Test"(GoogleTestTestSuiteSpec) {
+            testing $.components.get(vendorLibraryName)
+
+            sources.cpp {
+                source {
+                    srcDir 'src/test/cpp'
+                    include '**/*.cpp'
+                }
+            }
+
+            useLibrary(it, "wpilib", "googletest")
+        }
+    }
+}
+
+doxygen {
+    executables {
+        doxygen version : '1.8.13'
+    }
+
+    generate_html true
+    javadoc_autobrief true
+    source project.file('src/main/include')
+}
+
+// Maven Publishing
+
+task zipHeaders(type: Zip) {
+    from fileTree('src/main/include')
+
+    classifier = 'headers'
+}
+
+task zipDoxygen(type: Zip) {
+    from doxygen
+
+    classifier = 'doxygen'
+}
+
+publishing {
+    publications {
+        "${libraryCppName}"(MavenPublication) {
+            artifactId libraryCppName
+
+            artifact zipHeaders {
+                classifier 'headers'
+            }
+
+            artifact zipDoxygen {
+                classifier 'doxygen'
+            }
+
+            binaryArtifacts(it, vendorLibraryName)
+        }
+    }
+}
+

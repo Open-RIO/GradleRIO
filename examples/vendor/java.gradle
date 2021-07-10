@@ -1,0 +1,43 @@
+apply plugin: 'java'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile wpi.deps.wpilib()
+    testCompile 'junit:junit:4.12'
+}
+
+targetCompatibility = '11'
+sourceCompatibility = '11'
+
+// Maven Publishing
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    from sourceSets.main.allSource
+
+    classifier = 'sources'
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    from javadoc.destinationDir
+
+    classifier = 'javadoc'
+}
+
+publishing {
+    publications {
+        "${libraryJavaName}"(MavenPublication) {
+            artifactId libraryJavaName
+
+            artifact jar
+            artifact sourcesJar {
+                classifier 'sources'
+            }
+            artifact javadocJar {
+                classifier 'javadoc'
+            }
+        }
+    }
+}

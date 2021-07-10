@@ -1,0 +1,49 @@
+plugins.withType(CppPlugin).whenPluginAdded {
+    ext.binaryPublishers = [:]
+    ext.binaryArtifacts = { scope, name ->
+        if (binaryPublishers[name] == null)
+            binaryPublishers[name] = []
+        binaryPublishers[name] << [scope: scope]
+    }
+
+    model {
+        binaries {
+            withType(NativeBinarySpec) {
+                def bin = it
+                if (buildable && !(it instanceof TestSuiteBinarySpec)) {
+                    def shared = bin instanceof SharedLibraryBinary
+                    def taskSuffix = "${component.name}${targetPlatform.name}${buildType.name}${shared ? 'shared' : 'static'}"
+                    def source = (shared ? bin.sharedLibraryFile : bin.staticLibraryFile)
+
+                    def zipTask = task "zip${taskSuffix}"(type: Zip) {
+                        from(source)
+                        into(targetPlatform.name)
+
+                        baseName = component.name
+                        classifier = targetPlatform.name
+
+                        dependsOn bin.tasks.withType(AbstractLinkTask)
+                    }
+
+                    binaryPublishers[bin.component.name]?.each { entry -> 
+                        entry.scope.artifact(zipTask) {
+                            classifier targetPlatform.name + (buildType.name == 'debug' ? 'debug' : '') + (shared ? '' : 'static')
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "distLocal"
+            url = "${rootProject.buildDir}/mvnDistRepo"
+        }
+    }
+    publications.all {
+        groupId group
+    }
+}

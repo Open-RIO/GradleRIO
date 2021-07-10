@@ -1,0 +1,25 @@
+plugins {
+    id 'org.ysb33r.doxygen' version '0.5'
+    id 'maven-publish'
+    id "edu.wpi.first.GradleRIO" version "2019.1.1-beta-4c"
+}
+
+ext.uuid = 'YOUR_UUID_HERE'
+ext.mavenUrl = 'YOUR_MAVEN_SERVER_HERE'
+ext.jsonUrl = 'YOUR_VENDORDEPS_JSON_URL_HERE'
+
+group = 'my.vendor'
+ext.vendorLibraryName = 'MyVendorLibrary'
+version = '2019.1.1'
+
+ext.libraryJavaName = "${ext.vendorLibraryName}-Java"
+ext.libraryCppName = "${ext.vendorLibraryName}-cpp"
+
+apply from: 'publishingtools.gradle'
+apply from: 'cpp.gradle'
+apply from: 'java.gradle'
+apply from: 'vendordeps.gradle'
+
+wrapper {
+    gradleVersion = 5.0
+}

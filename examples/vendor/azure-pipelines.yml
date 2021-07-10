@@ -1,0 +1,26 @@
+resources:
+  containers:
+  - container: wpilib
+    image: wpilib/roborio-cross-ubuntu:2019-18.04
+
+jobs:
+- job: Windows
+  pool:
+    vmImage: 'VS2017-Win2016'
+  steps:
+  - template: azure-init.yml
+  - template: azure-steps.yml
+
+- job: macOS
+  pool:
+    vmImage: 'macOS-10.13'
+  steps:
+  - template: azure-init.yml
+  - template: azure-steps.yml
+
+- job: Linux
+  pool: 
+    vmImage: 'Ubuntu-16.04'
+  container: wpilib
+  steps:
+  - template: azure-steps.yml
