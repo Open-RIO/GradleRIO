@@ -108,14 +108,9 @@ Finally, you can generate and open your solution with the following command:
 Please see the gradle guide on building native software for help: https://docs.gradle.org/current/userguide/native_software.html#native_binaries:visual_studio
 
 ## Upgrading
-To upgrade your version of GradleRIO, you must first upgrade gradle. Near the bottom of your build.gradle, change the wrapper version to the following, and then run `./gradlew wrapper`:
-```gradle
-task wrapper(type: Wrapper) {
-    gradleVersion = '5.0'
-}
-```
+To upgrade your Gradle project (and GradleRio plugin) from one year to the next follow the [Importing a Gradle Project](https://docs.wpilib.org/en/stable/docs/software/vscode-overview/importing-gradle-project.html) instructions in the WPILib Documentation.
 
-Next, replace the version in the plugin line (only change the GradleRIO line):
+For mid-season updates to GradleRio, edit build.gradle and replace the version in the plugin line (only change the GradleRIO line):
 ```gradle
 plugins {
     // ... other plugins ...
