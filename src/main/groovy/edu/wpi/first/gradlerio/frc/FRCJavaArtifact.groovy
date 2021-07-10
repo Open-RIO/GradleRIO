@@ -55,7 +55,7 @@ class FRCJavaArtifact extends JavaArtifact {
             if (rCmd != null) {
                 def binFile = PathUtils.combine(ctx.workingDir, filename ?: file.get().name)
                 rCmd = rCmd.replace('<<BINARY>>', binFile)
-                ctx.execute("echo '${rCmd}' > /home/lvuser/robotCommand")
+                ctx.execute("echo 'exec ${rCmd}' > /home/lvuser/robotCommand")
             }
         }
         def conffile = new File(project.buildDir, "debug/${name}_${ctx.deployLocation.target.name}.debugconfig")
