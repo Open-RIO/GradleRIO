@@ -12,8 +12,15 @@ import jaci.gradle.nativedeps.DelegatedDependencySet
 import jaci.gradle.nativedeps.DependencySpecExtension
 import org.gradle.api.GradleException
 import org.gradle.api.Project
+import org.gradle.api.artifacts.Dependency
+import org.gradle.api.artifacts.ModuleDependency
 import org.gradle.api.plugins.ExtensionAware
 import org.gradle.nativeplatform.NativeBinarySpec
+import org.gradle.api.artifacts.dsl.ComponentMetadataHandler
+import org.gradle.api.artifacts.DependencyMetadata
+import org.gradle.api.artifacts.ComponentMetadataDetails
+import org.gradle.api.artifacts.VariantMetadata
+import org.gradle.api.artifacts.DependencyMetadata
 import org.gradle.platform.base.VariantComponentSpec
 
 import javax.inject.Inject
@@ -124,13 +131,34 @@ public class WPIVendorDepsExtension {
         return inputVersion == 'wpilib' ? wpiExt.wpilibVersion : inputVersion
     }
 
-    List<String> java(String... ignore) {
+    private Dependency GetDependency(JavaArtifact art) {
+        String moduleName = "${art.groupId}:${art.artifactId}".toString();
+        String depName = "${moduleName}:${getVersion(art.version, wpiExt)}".toString();
+        Dependency gdep = wpiExt.project.dependencies.create(depName);
+        try {
+            wpiExt.project.dependencies.components { ComponentMetadataHandler meta ->
+                meta.withModule(moduleName) { ComponentMetadataDetails details ->
+                    details.allVariants { VariantMetadata varMeta ->
+                        varMeta.withDependencies { Collection col ->
+                            col.removeIf { DependencyMetadata item -> item.group.startsWith('edu.wpi.first') }
+                        }
+                    }
+                }
+            }
+        } catch (ex) {
+            println "Issue setting component metadata for ${depName}. Build could have issues with incorrect transitive dependencies."
+            println "Please create an issue at https://github.com/wpilibsuite/allwpilib with this message so we can investigate"
+        }
+        return gdep;
+    }
+
+    List<Dependency> java(String... ignore) {
         if (dependencies == null) return []
 
         return dependencies.findAll { !isIgnored(ignore, it) }.collectMany { JsonDependency dep ->
             dep.javaDependencies.collect { JavaArtifact art ->
-                "${art.groupId}:${art.artifactId}:${getVersion(art.version, wpiExt)}".toString()
-            } as List<String>
+                GetDependency(art)
+            } as List<Dependency>
         }
     }
 
