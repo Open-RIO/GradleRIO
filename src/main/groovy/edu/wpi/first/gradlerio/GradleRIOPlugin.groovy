@@ -4,6 +4,7 @@ import edu.wpi.first.gradlerio.caching.WrapperInspector
 import edu.wpi.first.gradlerio.frc.FRCPlugin
 import edu.wpi.first.gradlerio.frc.RoboRIO
 import edu.wpi.first.gradlerio.ide.ClionPlugin
+import edu.wpi.first.gradlerio.frcvision.FRCVisionPlugin
 import edu.wpi.first.gradlerio.ide.IDEPlugin
 import edu.wpi.first.gradlerio.test.TestPlugin
 import edu.wpi.first.gradlerio.wpi.WPIPlugin
@@ -44,6 +45,9 @@ class GradleRIOPlugin implements Plugin<Project> {
         // Native libraries have their own dependency management system
         project.configurations.maybeCreate("nativeLib")
         project.configurations.maybeCreate("nativeZip")
+        
+        project.configurations.maybeCreate("nativeVisionLib")
+        project.configurations.maybeCreate("nativeVisionZip")
 
         project.configurations.maybeCreate("nativeDesktopLib")
         project.configurations.maybeCreate("nativeDesktopZip")
@@ -56,6 +60,7 @@ class GradleRIOPlugin implements Plugin<Project> {
 
         project.pluginManager.apply(EmbeddedTools)
         project.pluginManager.apply(FRCPlugin)
+        project.pluginManager.apply(FRCVisionPlugin)
         project.pluginManager.apply(WPIPlugin)
         project.pluginManager.apply(ClionPlugin)
         project.pluginManager.apply(IDEPlugin)

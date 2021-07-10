@@ -43,6 +43,7 @@ class WPIPlugin implements Plugin<Project> {
 
             NativeUtilsExtension nte = project.extensions.getByType(NativeUtilsExtension)
             nte.withRoboRIO()
+            nte.withRaspbian()
             nte.addWpiNativeUtils()
 
             ToolchainExtension te = project.extensions.getByType(ToolchainExtension)

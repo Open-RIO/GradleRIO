@@ -1,0 +1,65 @@
+plugins {
+    id "cpp"
+    id "google-test-test-suite"
+    id "edu.wpi.first.GradleRIO" version "2020.3.2"
+}
+
+// Define my targets (Pi) and artifacts (deployable files)
+// This is added by GradleRIO's backing project EmbeddedTools.
+deploy {
+    targets {
+        pi("pi") {
+            // Team number is loaded either from the .wpilib/wpilib_preferences.json
+            // or from command line. If not found an exception will be thrown.
+            // You can use getTeamOrDefault(team) instead of getTeamNumber if you
+            // want to store a team number in this file.
+            team = frc.getTeamNumber()
+        }
+    }
+    artifacts {
+        frcvisionNativeArtifact('frcCpp') {
+            targets << "pi"
+            component = 'frcvisionUserProgram'
+            // Debug can be overridden by command line, for use with VSCode
+            debug = frc.getDebugOrDefault(false)
+        }
+    }
+}
+
+model {
+    components {
+        frcvisionUserProgram(NativeExecutableSpec) {
+            targetPlatform wpi.platforms.raspbian
+            targetPlatform wpi.platforms.desktop
+
+            sources.cpp {
+                source {
+                    srcDir 'src/main/cpp'
+                }
+                exportedHeaders {
+                    srcDir 'src/main/include'
+                }
+            }
+
+            // Defining my dependencies. In this case, WPILib (+ friends), and vendor libraries.
+            wpi.deps.wpilib(it)
+            wpi.deps.vendor.cpp(it)
+        }
+    }
+    testSuites {
+        frcvisionUserProgramTest(GoogleTestTestSuiteSpec) {
+            testing $.components.frcvisionUserProgram
+
+            sources.cpp {
+                source {
+                    srcDir 'src/test/cpp'
+                    include '**/*.cpp'
+                }
+            }
+
+            wpi.deps.wpilib(it)
+            wpi.deps.googleTest(it)
+            wpi.deps.vendor.cpp(it)
+        }
+    }
+}
